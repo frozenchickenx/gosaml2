@@ -69,7 +69,7 @@ func (sp *SAMLServiceProvider) ParseAndValidateAuthNRequest(encodedRequest strin
 	}
 
 	if !sp.SkipSignatureValidation {
-		el, err = sp.validateElementSignature(el)
+		_, err = sp.validateElementSignature(el)
 		if errors.Is(err, dsig.ErrMissingSignature) {
 			// Unfortunately we just blew away our Response
 			el = doc.Root()
