@@ -319,12 +319,5 @@ func (sp *SAMLServiceProvider) ValidateDecodedAuthNRequest(request *AuthNRequest
 		return ErrMissingElement{Tag: IssuerTag}
 	}
 
-	if sp.IdentityProviderIssuer == "" {
-		return ErrInvalidValue{
-			Key:    IssuerTag,
-			Reason: "IdentityProviderIssuer is required",
-		}
-	}
-
 	return nil
 }
