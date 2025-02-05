@@ -26,6 +26,7 @@ type AuthNRequest struct {
 	AssertionConsumerServiceURL string    `xml:",attr"`
 	IssueInstant                time.Time `xml:",attr"`
 	Destination                 string    `xml:",attr"`
+	ProviderName                string    `xml:",attr"`
 
 	Issuer     *Issuer     `xml:"Issuer"`
 	Signature  *Signature  `xml:"Signature"`
