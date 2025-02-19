@@ -47,6 +47,7 @@ func (e CBC) Encrypt(key interface{}, plaintext []byte, _ []byte) (*etree.Elemen
 
 	encryptedDataEl := etree.NewElement("xenc:EncryptedData")
 	encryptedDataEl.CreateAttr("xmlns:xenc", "http://www.w3.org/2001/04/xmlenc#")
+	encryptedDataEl.CreateAttr("Type", "http://www.w3.org/2001/04/xmlenc#Element")
 	{
 		randBuf := make([]byte, 16)
 		if _, err := RandReader.Read(randBuf); err != nil {
