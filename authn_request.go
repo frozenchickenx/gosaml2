@@ -28,39 +28,17 @@ type AuthNRequest struct {
 	Destination                 string    `xml:",attr"`
 	ProviderName                string    `xml:",attr"`
 
-	Issuer     *Issuer     `xml:"Issuer"`
-	Signature  *Signature  `xml:"Signature"`
-	Extensions *Extensions `xml:"Extensions"`
+	Issuer *Issuer `xml:"Issuer"`
+
+	SignatureDigestValue string `xml:"Signature>SignedInfo>Reference>DigestValue"`
+	SignatureValue       string `xml:"Signature>SignatureValue"`
+	SignatureKeyName     string `xml:"Signature>KeyInfo>KeyName"`
+	SignatureX509Cert    string `xml:"Signature>KeyInfo>X509Data>X509Certificate"`
+
+	Picker string `xml:"Extensions>Picker"`
 }
 
 type Issuer struct {
 	SPProvidedID string `xml:",attr"`
 	Value        string `xml:",chardata"`
-}
-
-type Signature struct {
-	SignedInfo     *SignedInfo `xml:"SignedInfo"`
-	SignatureValue string      `xml:"SignatureValue"`
-	KeyInfo        *KeyInfo    `xml:"KeyInfo"`
-}
-
-type SignedInfo struct {
-	Reference *Reference `xml:"Reference"`
-}
-
-type Reference struct {
-	URI         string `xml:",attr"`
-	DigestValue string `xml:"DigestValue"`
-}
-
-type KeyInfo struct {
-	KeyName string `xml:"KeyName"`
-}
-
-type X509Data struct {
-	X509Certificate string `xml:"X509Certificate"`
-}
-
-type Extensions struct {
-	Picker string `xml:"Picker"`
 }

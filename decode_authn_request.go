@@ -38,9 +38,8 @@ func GetKeyNameFromAuthNRequest(encodedRequest string) (string, error) {
 	}
 
 	// attempt to extract key name from the request
-	if decodedRequest.Signature != nil &&
-		decodedRequest.Signature.KeyInfo != nil {
-		return decodedRequest.Signature.KeyInfo.KeyName, nil
+	if decodedRequest.SignatureKeyName != "" {
+		return decodedRequest.SignatureKeyName, nil
 	}
 
 	return "", fmt.Errorf("key name not found in the request")

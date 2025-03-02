@@ -29,53 +29,33 @@ import (
 
 const issueInstantFormat = "2006-01-02T15:04:05Z"
 
-func (sp *SAMLServiceProvider) buildAuthnRequest(includeSig bool) (*etree.Document, error) {
+func (sp *SAMLServiceProvider) buildAuthnRequest(req AuthNRequest, includeSig bool) (*etree.Document, error) {
 	authnRequest := &etree.Element{
-		Space: "samlp",
+		Space: "saml2p",
 		Tag:   "AuthnRequest",
 	}
 
-	authnRequest.CreateAttr("xmlns:samlp", "urn:oasis:names:tc:SAML:2.0:protocol")
-	authnRequest.CreateAttr("xmlns:saml", "urn:oasis:names:tc:SAML:2.0:assertion")
-
-	arId := uuid.NewV4()
-
-	authnRequest.CreateAttr("ID", "_"+arId.String())
+	authnRequest.CreateAttr("xmlns:saml2p", SAMLProtocolNamespace)
+	authnRequest.CreateAttr("ID", "_"+uuid.NewV4().String())
 	authnRequest.CreateAttr("Version", "2.0")
-	authnRequest.CreateAttr("ProtocolBinding", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST")
-	authnRequest.CreateAttr("AssertionConsumerServiceURL", sp.AssertionConsumerServiceURL)
+	authnRequest.CreateAttr("ProtocolBinding", BindingHttpPost)
+	authnRequest.CreateAttr("AssertionConsumerServiceURL", req.AssertionConsumerServiceURL)
 	authnRequest.CreateAttr("IssueInstant", sp.Clock.Now().UTC().Format(issueInstantFormat))
-	authnRequest.CreateAttr("Destination", sp.IdentityProviderSSOURL)
-	if sp.ForceAuthn {
-		authnRequest.CreateAttr("ForceAuthn", "true")
-	}
-	if sp.IsPassive {
-		authnRequest.CreateAttr("IsPassive", "true")
+	authnRequest.CreateAttr("Destination", req.Destination)
+	if req.ProviderName != "" {
+		authnRequest.CreateAttr("ProviderName", req.ProviderName)
 	}
 
-	// NOTE(russell_h): In earlier versions we mistakenly sent the IdentityProviderIssuer
-	// in the AuthnRequest. For backwards compatibility we will fall back to that
-	// behavior when ServiceProviderIssuer isn't set.
-	if sp.ServiceProviderIssuer != "" {
-		authnRequest.CreateElement("saml:Issuer").SetText(sp.ServiceProviderIssuer)
-	} else {
-		authnRequest.CreateElement("saml:Issuer").SetText(sp.IdentityProviderIssuer)
-	}
+	issuer := authnRequest.CreateElement("saml2:Issuer")
+	issuer.SetText(req.Issuer.Value)
+	issuer.CreateAttr("xmlns:saml2", SAMLAssertionNamespace)
+	issuer.CreateAttr("SPProvidedID", req.Issuer.SPProvidedID)
 
-	nameIdPolicy := authnRequest.CreateElement("samlp:NameIDPolicy")
-	nameIdPolicy.CreateAttr("AllowCreate", "true")
-	if sp.NameIdFormat != "" {
-		nameIdPolicy.CreateAttr("Format", sp.NameIdFormat)
-	}
-
-	if sp.RequestedAuthnContext != nil {
-		requestedAuthnContext := authnRequest.CreateElement("samlp:RequestedAuthnContext")
-		requestedAuthnContext.CreateAttr("Comparison", sp.RequestedAuthnContext.Comparison)
-
-		for _, context := range sp.RequestedAuthnContext.Contexts {
-			authnContextClassRef := requestedAuthnContext.CreateElement("saml:AuthnContextClassRef")
-			authnContextClassRef.SetText(context)
-		}
+	if req.Picker != "" {
+		extensions := authnRequest.CreateElement("saml2p:Extensions")
+		extensions.CreateAttr("xmlns:picker", "urn:idp:picker:SAML:extensions")
+		picker := extensions.CreateElement("picker:Picker")
+		picker.SetText(req.Picker)
 	}
 
 	doc := etree.NewDocument()
@@ -94,12 +74,12 @@ func (sp *SAMLServiceProvider) buildAuthnRequest(includeSig bool) (*etree.Docume
 	return doc, nil
 }
 
-func (sp *SAMLServiceProvider) BuildAuthRequestDocument() (*etree.Document, error) {
-	return sp.buildAuthnRequest(true)
+func (sp *SAMLServiceProvider) BuildAuthRequestDocument(req AuthNRequest) (*etree.Document, error) {
+	return sp.buildAuthnRequest(req, true)
 }
 
-func (sp *SAMLServiceProvider) BuildAuthRequestDocumentNoSig() (*etree.Document, error) {
-	return sp.buildAuthnRequest(false)
+func (sp *SAMLServiceProvider) BuildAuthRequestDocumentNoSig(req AuthNRequest) (*etree.Document, error) {
+	return sp.buildAuthnRequest(req, false)
 }
 
 // SignAuthnRequest takes a document, builds a signature, creates another document
@@ -127,8 +107,8 @@ func (sp *SAMLServiceProvider) SignAuthnRequest(el *etree.Element) (*etree.Eleme
 }
 
 // BuildAuthRequest builds <AuthnRequest> for identity provider
-func (sp *SAMLServiceProvider) BuildAuthRequest() (string, error) {
-	doc, err := sp.BuildAuthRequestDocument()
+func (sp *SAMLServiceProvider) BuildAuthRequest(req AuthNRequest) (string, error) {
+	doc, err := sp.BuildAuthRequestDocument(req)
 	if err != nil {
 		return "", err
 	}
@@ -255,14 +235,15 @@ func (sp *SAMLServiceProvider) buildAuthBodyPostFromDocument(relayState string, 
 }
 
 // BuildAuthBodyPost builds the POST body to be sent to IDP.
+
 func (sp *SAMLServiceProvider) BuildAuthBodyPost(relayState string) ([]byte, error) {
 	var doc *etree.Document
 	var err error
 
 	if sp.SignAuthnRequests {
-		doc, err = sp.BuildAuthRequestDocument()
+		doc, err = sp.BuildAuthRequestDocument(AuthNRequest{})
 	} else {
-		doc, err = sp.BuildAuthRequestDocumentNoSig()
+		doc, err = sp.BuildAuthRequestDocumentNoSig(AuthNRequest{})
 	}
 
 	if err != nil {
@@ -274,13 +255,14 @@ func (sp *SAMLServiceProvider) BuildAuthBodyPost(relayState string) ([]byte, err
 
 // BuildAuthBodyPostFromDocument builds the POST body to be sent to IDP.
 // It takes the AuthnRequest xml as input.
+
 func (sp *SAMLServiceProvider) BuildAuthBodyPostFromDocument(relayState string, doc *etree.Document) ([]byte, error) {
 	return sp.buildAuthBodyPostFromDocument(relayState, doc)
 }
 
 // BuildAuthURL builds redirect URL to be sent to principal
 func (sp *SAMLServiceProvider) BuildAuthURL(relayState string) (string, error) {
-	doc, err := sp.BuildAuthRequestDocument()
+	doc, err := sp.BuildAuthRequestDocument(AuthNRequest{})
 	if err != nil {
 		return "", err
 	}
