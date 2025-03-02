@@ -314,8 +314,7 @@ func (sp *SAMLServiceProvider) ValidateDecodedAuthNRequest(request *AuthNRequest
 		return err
 	}
 
-	issuer := request.Issuer
-	if issuer == nil {
+	if request.Issuer == nil {
 		return ErrMissingElement{Tag: IssuerTag}
 	}
 
