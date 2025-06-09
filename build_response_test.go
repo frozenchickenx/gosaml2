@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	dsig "github.com/russellhaering/goxmldsig"
+	"github.com/frozenchickenx/gosaml2/dsig"
 	"github.com/stretchr/testify/require"
 )
 

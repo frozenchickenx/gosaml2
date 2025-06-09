@@ -21,9 +21,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/frozenchickenx/gosaml2/dsig"
 	"github.com/frozenchickenx/gosaml2/types"
-	dsig "github.com/russellhaering/goxmldsig"
-	dsigtypes "github.com/russellhaering/goxmldsig/types"
 )
 
 type ErrSaml struct {
@@ -145,9 +144,9 @@ func (sp *SAMLServiceProvider) Metadata() (*types.EntityDescriptor, error) {
 		}
 		keyDescriptors = append(keyDescriptors, types.KeyDescriptor{
 			Use: "signing",
-			KeyInfo: dsigtypes.KeyInfo{
-				X509Data: dsigtypes.X509Data{
-					X509Certificates: []dsigtypes.X509Certificate{dsigtypes.X509Certificate{
+			KeyInfo: dsig.KeyInfo{
+				X509Data: dsig.X509Data{
+					X509Certificates: []dsig.X509Certificate{{
 						Data: base64.StdEncoding.EncodeToString(signingCertBytes),
 					}},
 				},
@@ -162,9 +161,9 @@ func (sp *SAMLServiceProvider) Metadata() (*types.EntityDescriptor, error) {
 	if encryptionCertBytes != nil {
 		keyDescriptors = append(keyDescriptors, types.KeyDescriptor{
 			Use: "encryption",
-			KeyInfo: dsigtypes.KeyInfo{
-				X509Data: dsigtypes.X509Data{
-					X509Certificates: []dsigtypes.X509Certificate{{
+			KeyInfo: dsig.KeyInfo{
+				X509Data: dsig.X509Data{
+					X509Certificates: []dsig.X509Certificate{{
 						Data: base64.StdEncoding.EncodeToString(encryptionCertBytes),
 					}},
 				},
@@ -220,9 +219,9 @@ func (sp *SAMLServiceProvider) MetadataWithSLO(validityHours int64) (*types.Enti
 			KeyDescriptors: []types.KeyDescriptor{
 				{
 					Use: "signing",
-					KeyInfo: dsigtypes.KeyInfo{
-						X509Data: dsigtypes.X509Data{
-							X509Certificates: []dsigtypes.X509Certificate{{
+					KeyInfo: dsig.KeyInfo{
+						X509Data: dsig.X509Data{
+							X509Certificates: []dsig.X509Certificate{{
 								Data: base64.StdEncoding.EncodeToString(signingCertBytes),
 							}},
 						},
@@ -230,9 +229,9 @@ func (sp *SAMLServiceProvider) MetadataWithSLO(validityHours int64) (*types.Enti
 				},
 				{
 					Use: "encryption",
-					KeyInfo: dsigtypes.KeyInfo{
-						X509Data: dsigtypes.X509Data{
-							X509Certificates: []dsigtypes.X509Certificate{{
+					KeyInfo: dsig.KeyInfo{
+						X509Data: dsig.X509Data{
+							X509Certificates: []dsig.X509Certificate{{
 								Data: base64.StdEncoding.EncodeToString(encryptionCertBytes),
 							}},
 						},
