@@ -76,9 +76,11 @@ func (sp *SAMLServiceProvider) buildResponse(respData SAMLResponseData) (*etree.
 	assertion.CreateAttr(IssueInstantAttr, instant)
 	assertion.CreateAttr(VersionAttr, "2.0")
 	assertion.CreateAttr("xmlns:xs", "http://www.w3.org/2001/XMLSchema")
-	issuer.SetText(respData.IssuerName)
+	assertionIssuer := assertion.CreateElement("saml2:Issuer")
+	assertionIssuer.CreateAttr("xmlns:saml2", SAMLAssertionNamespace)
+	assertionIssuer.SetText(respData.IssuerName)
 	if respData.IsLegacyIssuerFormat {
-		issuer.CreateAttr(FormatAttr, NameIDFormatEntity)
+		assertionIssuer.CreateAttr(FormatAttr, NameIDFormatEntity)
 	}
 	// subject
 	subject := assertion.CreateElement("saml2:Subject")
@@ -157,6 +159,7 @@ func (sp *SAMLServiceProvider) buildResponse(respData SAMLResponseData) (*etree.
 
 	return doc, nil
 }
+
 func (sp *SAMLServiceProvider) BuildResponseDocument(respData SAMLResponseData) (*etree.Document, error) {
 	return sp.buildResponse(respData)
 }
@@ -230,7 +233,7 @@ func (sp *SAMLServiceProvider) BuildResponseBodyPostFromDocument(relayState stri
 			URL          string
 			SAMLResponse string
 		}{
-			URL:          sp.IdentityProviderSLOURL,
+			URL:          endpointURL,
 			SAMLResponse: encodedRespBuf,
 		}
 
