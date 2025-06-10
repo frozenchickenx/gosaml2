@@ -27,8 +27,9 @@ type SigningContext struct {
 	Canonicalizer Canonicalizer
 
 	// KeyStore is mutually exclusive with signer and certs
-	signer crypto.Signer
-	certs  [][]byte
+	signer  crypto.Signer
+	keyName string
+	certs   [][]byte
 }
 
 func NewDefaultSigningContext(ks X509KeyStore) *SigningContext {
@@ -46,7 +47,7 @@ func NewDefaultSigningContext(ks X509KeyStore) *SigningContext {
 // The certificate chain is a slice of ASN.1 DER-encoded X.509 certificates.
 // A SigningContext created with this function should not use the KeyStore field.
 // It will return error if passed a nil crypto.Signer
-func NewSigningContext(signer crypto.Signer, certs [][]byte) (*SigningContext, error) {
+func NewSigningContext(signer crypto.Signer, keyName string, certs [][]byte) (*SigningContext, error) {
 	if signer == nil {
 		return nil, errors.New("signer cannot be nil for NewSigningContext")
 	}
@@ -56,8 +57,9 @@ func NewSigningContext(signer crypto.Signer, certs [][]byte) (*SigningContext, e
 		Prefix:        DefaultPrefix,
 		Canonicalizer: MakeC14N11Canonicalizer(),
 
-		signer: signer,
-		certs:  certs,
+		signer:  signer,
+		keyName: keyName,
+		certs:   certs,
 	}
 	return ctx, nil
 }
@@ -279,6 +281,10 @@ func (ctx *SigningContext) ConstructSignature(el *etree.Element, enveloped bool)
 	for _, cert := range certs {
 		x509Certificate := ctx.createNamespacedElement(x509Data, X509CertificateTag)
 		x509Certificate.SetText(base64.StdEncoding.EncodeToString(cert))
+	}
+	keyName := ctx.createNamespacedElement(keyInfo, KeyNameTag)
+	if ctx.keyName != "" {
+		keyName.SetText(ctx.keyName)
 	}
 
 	return sig, nil

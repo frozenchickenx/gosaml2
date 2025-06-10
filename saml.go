@@ -67,6 +67,7 @@ type SAMLServiceProvider struct {
 	// with identity providers it is recommended to leave this unset.
 	RequestedAuthnContext   *RequestedAuthnContext
 	AudienceURI             string
+	Alias                   string
 	IDPCertificateStore     dsig.X509CertificateStore
 	NameIdFormat            string
 	ValidateEncryptionCert  bool
@@ -343,7 +344,7 @@ func (sp *SAMLServiceProvider) SigningContext() *dsig.SigningContext {
 	}
 	var err error
 	if signing != nil {
-		sp.signingContext, err = dsig.NewSigningContext(signing.Signer, [][]byte{signing.Cert})
+		sp.signingContext, err = dsig.NewSigningContext(signing.Signer, sp.Alias, [][]byte{signing.Cert})
 		if err != nil {
 			// Ideally this function should return the error, but updating the function signature would be backward incompatible.
 			// In practice, this error should never happen because NewSigningContext only errors when passed a nil signer, and

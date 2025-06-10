@@ -23,6 +23,7 @@ const (
 	DigestValueTag            = "DigestValue"
 	SignatureValueTag         = "SignatureValue"
 	KeyInfoTag                = "KeyInfo"
+	KeyNameTag                = "KeyName"
 	X509DataTag               = "X509Data"
 	X509CertificateTag        = "X509Certificate"
 	InclusiveNamespacesTag    = "InclusiveNamespaces"
