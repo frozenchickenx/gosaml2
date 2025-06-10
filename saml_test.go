@@ -104,7 +104,7 @@ func signResponse(t *testing.T, resp string, sp *SAMLServiceProvider) string {
 		parent.RemoveChild(sig)
 	}
 
-	el, err = sp.SigningContext().SignEnveloped(el)
+	el, err = sp.SigningContext(false).SignEnveloped(el)
 	require.NoError(t, err)
 
 	doc0 := etree.NewDocument()

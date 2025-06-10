@@ -88,7 +88,7 @@ func (sp *SAMLServiceProvider) BuildAuthRequestDocumentNoSig(req AuthNRequest) (
 //
 // [1] https://docs.oasis-open.org/security/saml/v2.0/saml-schema-protocol-2.0.xsd
 func (sp *SAMLServiceProvider) SignAuthnRequest(el *etree.Element) (*etree.Element, error) {
-	ctx := sp.SigningContext()
+	ctx := sp.SigningContext(false)
 
 	sig, err := ctx.ConstructSignature(el, true)
 	if err != nil {
@@ -153,7 +153,7 @@ func (sp *SAMLServiceProvider) buildAuthURLFromDocument(relayState, binding stri
 
 	if sp.SignAuthnRequests && binding == BindingHttpRedirect {
 		// Sign URL encoded query (see Section 3.4.4.1 DEFLATE Encoding of saml-bindings-2.0-os.pdf)
-		ctx := sp.SigningContext()
+		ctx := sp.SigningContext(false)
 		qs.Add("SigAlg", ctx.GetSignatureMethodIdentifier())
 		var rawSignature []byte
 		if rawSignature, err = ctx.SignString(signatureInputString(qs.Get("SAMLRequest"), qs.Get("RelayState"), qs.Get("SigAlg"))); err != nil {
@@ -338,7 +338,7 @@ func (sp *SAMLServiceProvider) buildLogoutRequest(includeSig bool, nameID string
 }
 
 func (sp *SAMLServiceProvider) SignLogoutRequest(el *etree.Element) (*etree.Element, error) {
-	ctx := sp.SigningContext()
+	ctx := sp.SigningContext(false)
 
 	sig, err := ctx.ConstructSignature(el, true)
 	if err != nil {
@@ -468,7 +468,7 @@ func (sp *SAMLServiceProvider) buildLogoutURLFromDocument(relayState, binding st
 
 	if binding == BindingHttpRedirect {
 		// Sign URL encoded query (see Section 3.4.4.1 DEFLATE Encoding of saml-bindings-2.0-os.pdf)
-		ctx := sp.SigningContext()
+		ctx := sp.SigningContext(false)
 		qs.Add("SigAlg", ctx.GetSignatureMethodIdentifier())
 		var rawSignature []byte
 		//qs.Encode() sorts the keys (See https://golang.org/pkg/net/url/#Values.Encode).

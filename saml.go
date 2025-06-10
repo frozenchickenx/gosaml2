@@ -67,8 +67,9 @@ type SAMLServiceProvider struct {
 	// with identity providers it is recommended to leave this unset.
 	RequestedAuthnContext   *RequestedAuthnContext
 	AudienceURI             string
-	Alias                   string
 	IDPCertificateStore     dsig.X509CertificateStore
+	EntityID                string
+	LegacyEntityID          string
 	NameIdFormat            string
 	ValidateEncryptionCert  bool
 	SkipSignatureValidation bool
@@ -326,7 +327,7 @@ func (sp *SAMLServiceProvider) getSignerCert() (crypto.Signer, []byte, error) {
 	return nil, nil, nil
 }
 
-func (sp *SAMLServiceProvider) SigningContext() *dsig.SigningContext {
+func (sp *SAMLServiceProvider) SigningContext(isLegacyIssuer bool) *dsig.SigningContext {
 	sp.signingContextMu.RLock()
 	signingContext := sp.signingContext
 	sp.signingContextMu.RUnlock()
@@ -342,9 +343,15 @@ func (sp *SAMLServiceProvider) SigningContext() *dsig.SigningContext {
 	if signing == nil {
 		signing = sp.spKeyStoreOverride
 	}
+
+	entityID := sp.EntityID
+	if isLegacyIssuer {
+		entityID = sp.LegacyEntityID
+	}
+
 	var err error
 	if signing != nil {
-		sp.signingContext, err = dsig.NewSigningContext(signing.Signer, sp.Alias, [][]byte{signing.Cert})
+		sp.signingContext, err = dsig.NewSigningContext(signing.Signer, entityID, [][]byte{signing.Cert})
 		if err != nil {
 			// Ideally this function should return the error, but updating the function signature would be backward incompatible.
 			// In practice, this error should never happen because NewSigningContext only errors when passed a nil signer, and
@@ -362,8 +369,8 @@ func (sp *SAMLServiceProvider) SigningContext() *dsig.SigningContext {
 	return sp.signingContext
 }
 
-func (sp *SAMLServiceProvider) SignResponse(el *etree.Element) (*etree.Element, error) {
-	ctx := sp.SigningContext()
+func (sp *SAMLServiceProvider) SignResponse(el *etree.Element, isLegacyIssuer bool) (*etree.Element, error) {
+	ctx := sp.SigningContext(isLegacyIssuer)
 
 	sig, err := ctx.ConstructSignature(el, true)
 	if err != nil {

@@ -57,7 +57,7 @@ func (sp *SAMLServiceProvider) buildLogoutResponse(statusCodeValue string, reqID
 
 	// Only POST binding includes <Signature> in <AuthnRequest> (includeSig)
 	if includeSig {
-		signed, err := sp.SignResponse(logoutResponse)
+		signed, err := sp.SignResponse(logoutResponse, false)
 		if err != nil {
 			return nil, err
 		}
