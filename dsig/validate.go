@@ -7,7 +7,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/frozenchickenx/gosaml2/types"
 	"regexp"
 
 	"github.com/beevik/etree"
@@ -107,7 +106,7 @@ func removeElementAtPath(el *etree.Element, path []int) bool {
 // The functionality of transform is currently very limited and purpose-specific.
 func (ctx *ValidationContext) transform(
 	el *etree.Element,
-	sig *types.Signature,
+	sig *Signature,
 	ref *Reference) (*etree.Element, Canonicalizer, error) {
 	transforms := ref.Transforms.Transforms
 
@@ -191,7 +190,7 @@ func (ctx *ValidationContext) digest(el *etree.Element, digestAlgorithmId string
 	return hash.Sum(nil), nil
 }
 
-func (ctx *ValidationContext) getCanonicalSignedInfo(sig *types.Signature) ([]byte, error) {
+func (ctx *ValidationContext) getCanonicalSignedInfo(sig *Signature) ([]byte, error) {
 	signatureElement := sig.UnderlyingElement()
 
 	nsCtx, err := etreeutils.NSBuildParentContext(signatureElement)
@@ -218,7 +217,7 @@ func (ctx *ValidationContext) getCanonicalSignedInfo(sig *types.Signature) ([]by
 }
 
 // deprecated
-func (ctx *ValidationContext) verifySignedInfo(sig *types.Signature, canonicalizer Canonicalizer, signatureMethodId string, cert *x509.Certificate, decodedSignature []byte) error {
+func (ctx *ValidationContext) verifySignedInfo(sig *Signature, canonicalizer Canonicalizer, signatureMethodId string, cert *x509.Certificate, decodedSignature []byte) error {
 	signatureElement := sig.UnderlyingElement()
 
 	nsCtx, err := etreeutils.NSBuildParentContext(signatureElement)
@@ -254,7 +253,7 @@ func (ctx *ValidationContext) verifySignedInfo(sig *types.Signature, canonicaliz
 	return nil
 }
 
-func (ctx *ValidationContext) validateSignature(el *etree.Element, sig *types.Signature, cert *x509.Certificate) (*etree.Element, error) {
+func (ctx *ValidationContext) validateSignature(el *etree.Element, sig *Signature, cert *x509.Certificate) (*etree.Element, error) {
 
 	// Actually verify the 'SignedInfo' was signed by a trusted source
 	signatureMethod := sig.SignedInfo.SignatureMethod.Algorithm
@@ -400,14 +399,14 @@ func validateShape(signatureEl *etree.Element) error {
 }
 
 // findSignature searches for a Signature element referencing the passed root element.
-func (ctx *ValidationContext) findSignature(root *etree.Element) (*types.Signature, error) {
+func (ctx *ValidationContext) findSignature(root *etree.Element) (*Signature, error) {
 	idAttrEl := root.SelectAttr(ctx.IdAttribute)
 	idAttr := ""
 	if idAttrEl != nil {
 		idAttr = idAttrEl.Value
 	}
 
-	var sig *types.Signature
+	var sig *Signature
 
 	// Traverse the tree looking for a Signature element
 	err := etreeutils.NSFindIterate(root, Namespace, SignatureTag, func(ctx etreeutils.NSContext, signatureEl *etree.Element) error {
@@ -475,7 +474,7 @@ func (ctx *ValidationContext) findSignature(root *etree.Element) (*types.Signatu
 		}
 
 		// Unmarshal the signature into a structured Signature type
-		_sig := &types.Signature{}
+		_sig := &Signature{}
 		err = etreeutils.NSUnmarshalElement(ctx, signatureEl, _sig)
 		if err != nil {
 			return err
@@ -504,7 +503,7 @@ func (ctx *ValidationContext) findSignature(root *etree.Element) (*types.Signatu
 	return sig, nil
 }
 
-func (ctx *ValidationContext) verifyCertificate(sig *types.Signature) (*x509.Certificate, error) {
+func (ctx *ValidationContext) verifyCertificate(sig *Signature) (*x509.Certificate, error) {
 	now := ctx.Clock.Now()
 
 	roots, err := ctx.CertificateStore.Certificates()
