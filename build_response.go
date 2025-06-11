@@ -15,6 +15,7 @@ type SAMLResponseData struct {
 	AssertionConsumerURL string
 	ConcurrencyRule      string
 	Email                string
+	EntityID             string
 	EToken               string
 	FirstName            string
 	IssuerName           string
@@ -120,7 +121,7 @@ func (sp *SAMLServiceProvider) buildResponse(respData SAMLResponseData) (*etree.
 	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrSPID, respData.SPID))
 	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrEmail, respData.Email))
 
-	signedAssertion, err := sp.SignResponse(assertion)
+	signedAssertion, err := sp.SignResponse(assertion, respData.IsLegacyIssuerFormat)
 	if err != nil {
 		return nil, err
 	}

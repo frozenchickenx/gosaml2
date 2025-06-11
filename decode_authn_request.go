@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	dsig "github.com/russellhaering/goxmldsig"
+	"github.com/frozenchickenx/gosaml2/dsig"
 )
 
 // GetKeyNameFromAuthNRequest takes a base 64 encoded SAML AuthNRequest and returns the key name.

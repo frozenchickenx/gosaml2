@@ -26,10 +26,10 @@ import (
 	"encoding/xml"
 
 	"github.com/beevik/etree"
+	"github.com/frozenchickenx/gosaml2/dsig"
+	"github.com/frozenchickenx/gosaml2/etreeutils"
 	"github.com/frozenchickenx/gosaml2/types"
 	rtvalidator "github.com/mattermost/xml-roundtrip-validator"
-	dsig "github.com/russellhaering/goxmldsig"
-	"github.com/russellhaering/goxmldsig/etreeutils"
 )
 
 const (

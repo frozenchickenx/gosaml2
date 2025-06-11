@@ -88,7 +88,7 @@ func TestRequestedAuthnContextOmitted(t *testing.T) {
 		SignAuthnRequests:           false,
 	}
 
-	request, err := sp.BuildAuthRequest()
+	request, err := sp.BuildAuthRequest(AuthNRequest{})
 	require.NoError(t, err)
 
 	doc := etree.NewDocument()
@@ -115,7 +115,7 @@ func TestRequestedAuthnContextIncluded(t *testing.T) {
 		SignAuthnRequests: false,
 	}
 
-	request, err := sp.BuildAuthRequest()
+	request, err := sp.BuildAuthRequest(AuthNRequest{})
 	require.NoError(t, err)
 
 	doc := etree.NewDocument()
@@ -139,7 +139,7 @@ func TestForceAuthnOmitted(t *testing.T) {
 		IdentityProviderSSOURL:      "https://idp.test/saml/sso",
 	}
 
-	request, err := sp.BuildAuthRequest()
+	request, err := sp.BuildAuthRequest(AuthNRequest{})
 	require.NoError(t, err)
 
 	doc := etree.NewDocument()
@@ -160,7 +160,7 @@ func TestForceAuthnIncluded(t *testing.T) {
 		ForceAuthn:                  true,
 	}
 
-	request, err := sp.BuildAuthRequest()
+	request, err := sp.BuildAuthRequest(AuthNRequest{})
 	require.NoError(t, err)
 
 	doc := etree.NewDocument()
@@ -181,7 +181,7 @@ func TestIsPassiveOmitted(t *testing.T) {
 		IdentityProviderSSOURL:      "https://idp.test/saml/sso",
 	}
 
-	request, err := sp.BuildAuthRequest()
+	request, err := sp.BuildAuthRequest(AuthNRequest{})
 	require.NoError(t, err)
 
 	doc := etree.NewDocument()
@@ -202,7 +202,7 @@ func TestIsPassiveIncluded(t *testing.T) {
 		IsPassive:                   true,
 	}
 
-	request, err := sp.BuildAuthRequest()
+	request, err := sp.BuildAuthRequest(AuthNRequest{})
 	require.NoError(t, err)
 
 	doc := etree.NewDocument()

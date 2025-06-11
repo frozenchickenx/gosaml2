@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/frozenchickenx/gosaml2/dsig"
 	"github.com/jonboulle/clockwork"
 	rtvalidator "github.com/mattermost/xml-roundtrip-validator"
-	dsig "github.com/russellhaering/goxmldsig"
 	"github.com/stretchr/testify/require"
 )
 

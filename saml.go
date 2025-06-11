@@ -21,9 +21,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/frozenchickenx/gosaml2/dsig"
 	"github.com/frozenchickenx/gosaml2/types"
-	dsig "github.com/russellhaering/goxmldsig"
-	dsigtypes "github.com/russellhaering/goxmldsig/types"
 )
 
 type ErrSaml struct {
@@ -69,6 +68,8 @@ type SAMLServiceProvider struct {
 	RequestedAuthnContext   *RequestedAuthnContext
 	AudienceURI             string
 	IDPCertificateStore     dsig.X509CertificateStore
+	EntityID                string
+	LegacyEntityID          string
 	NameIdFormat            string
 	ValidateEncryptionCert  bool
 	SkipSignatureValidation bool
@@ -145,9 +146,9 @@ func (sp *SAMLServiceProvider) Metadata() (*types.EntityDescriptor, error) {
 		}
 		keyDescriptors = append(keyDescriptors, types.KeyDescriptor{
 			Use: "signing",
-			KeyInfo: dsigtypes.KeyInfo{
-				X509Data: dsigtypes.X509Data{
-					X509Certificates: []dsigtypes.X509Certificate{dsigtypes.X509Certificate{
+			KeyInfo: dsig.KeyInfo{
+				X509Data: dsig.X509Data{
+					X509Certificates: []dsig.X509Certificate{{
 						Data: base64.StdEncoding.EncodeToString(signingCertBytes),
 					}},
 				},
@@ -162,9 +163,9 @@ func (sp *SAMLServiceProvider) Metadata() (*types.EntityDescriptor, error) {
 	if encryptionCertBytes != nil {
 		keyDescriptors = append(keyDescriptors, types.KeyDescriptor{
 			Use: "encryption",
-			KeyInfo: dsigtypes.KeyInfo{
-				X509Data: dsigtypes.X509Data{
-					X509Certificates: []dsigtypes.X509Certificate{{
+			KeyInfo: dsig.KeyInfo{
+				X509Data: dsig.X509Data{
+					X509Certificates: []dsig.X509Certificate{{
 						Data: base64.StdEncoding.EncodeToString(encryptionCertBytes),
 					}},
 				},
@@ -220,9 +221,9 @@ func (sp *SAMLServiceProvider) MetadataWithSLO(validityHours int64) (*types.Enti
 			KeyDescriptors: []types.KeyDescriptor{
 				{
 					Use: "signing",
-					KeyInfo: dsigtypes.KeyInfo{
-						X509Data: dsigtypes.X509Data{
-							X509Certificates: []dsigtypes.X509Certificate{{
+					KeyInfo: dsig.KeyInfo{
+						X509Data: dsig.X509Data{
+							X509Certificates: []dsig.X509Certificate{{
 								Data: base64.StdEncoding.EncodeToString(signingCertBytes),
 							}},
 						},
@@ -230,9 +231,9 @@ func (sp *SAMLServiceProvider) MetadataWithSLO(validityHours int64) (*types.Enti
 				},
 				{
 					Use: "encryption",
-					KeyInfo: dsigtypes.KeyInfo{
-						X509Data: dsigtypes.X509Data{
-							X509Certificates: []dsigtypes.X509Certificate{{
+					KeyInfo: dsig.KeyInfo{
+						X509Data: dsig.X509Data{
+							X509Certificates: []dsig.X509Certificate{{
 								Data: base64.StdEncoding.EncodeToString(encryptionCertBytes),
 							}},
 						},
@@ -326,7 +327,7 @@ func (sp *SAMLServiceProvider) getSignerCert() (crypto.Signer, []byte, error) {
 	return nil, nil, nil
 }
 
-func (sp *SAMLServiceProvider) SigningContext() *dsig.SigningContext {
+func (sp *SAMLServiceProvider) SigningContext(isLegacyIssuer bool) *dsig.SigningContext {
 	sp.signingContextMu.RLock()
 	signingContext := sp.signingContext
 	sp.signingContextMu.RUnlock()
@@ -342,9 +343,15 @@ func (sp *SAMLServiceProvider) SigningContext() *dsig.SigningContext {
 	if signing == nil {
 		signing = sp.spKeyStoreOverride
 	}
+
+	entityID := sp.EntityID
+	if isLegacyIssuer {
+		entityID = sp.LegacyEntityID
+	}
+
 	var err error
 	if signing != nil {
-		sp.signingContext, err = dsig.NewSigningContext(signing.Signer, [][]byte{signing.Cert})
+		sp.signingContext, err = dsig.NewSigningContext(signing.Signer, entityID, [][]byte{signing.Cert})
 		if err != nil {
 			// Ideally this function should return the error, but updating the function signature would be backward incompatible.
 			// In practice, this error should never happen because NewSigningContext only errors when passed a nil signer, and
@@ -362,8 +369,8 @@ func (sp *SAMLServiceProvider) SigningContext() *dsig.SigningContext {
 	return sp.signingContext
 }
 
-func (sp *SAMLServiceProvider) SignResponse(el *etree.Element) (*etree.Element, error) {
-	ctx := sp.SigningContext()
+func (sp *SAMLServiceProvider) SignResponse(el *etree.Element, isLegacyIssuer bool) (*etree.Element, error) {
+	ctx := sp.SigningContext(isLegacyIssuer)
 
 	sig, err := ctx.ConstructSignature(el, true)
 	if err != nil {

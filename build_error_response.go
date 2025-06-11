@@ -54,7 +54,7 @@ func (sp *SAMLServiceProvider) buildErrorResponse(errorRespData SAMLErrorRespons
 	doc := etree.NewDocument()
 
 	if includeSig {
-		signed, err := sp.SignResponse(errorResponse)
+		signed, err := sp.SignResponse(errorResponse, errorRespData.IsLegacyFormat)
 		if err != nil {
 			return nil, err
 		}

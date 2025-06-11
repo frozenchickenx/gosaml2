@@ -30,8 +30,8 @@ import (
 	"testing"
 
 	"github.com/beevik/etree"
+	"github.com/frozenchickenx/gosaml2/dsig"
 	"github.com/frozenchickenx/gosaml2/types"
-	dsig "github.com/russellhaering/goxmldsig"
 	"github.com/stretchr/testify/require"
 )
 
@@ -104,7 +104,7 @@ func signResponse(t *testing.T, resp string, sp *SAMLServiceProvider) string {
 		parent.RemoveChild(sig)
 	}
 
-	el, err = sp.SigningContext().SignEnveloped(el)
+	el, err = sp.SigningContext(false).SignEnveloped(el)
 	require.NoError(t, err)
 
 	doc0 := etree.NewDocument()
