@@ -112,14 +112,24 @@ func (sp *SAMLServiceProvider) buildResponse(respData SAMLResponseData) (*etree.
 	authnCtxClassRef.SetText(ClassesAuthnContextPassword)
 
 	attributeStatements := assertion.CreateElement("saml2:AttributeStatement")
-	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrFirstName, respData.FirstName))
-	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrLastName, respData.LastName))
-	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrZipCode, respData.ZipCode))
-	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrEToken, respData.EToken))
-	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrPicker, respData.Picker))
-	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrConcurrencyRule, respData.ConcurrencyRule))
-	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrSPID, respData.SPID))
-	attributeStatements.AddChild(buildAttribute(attributeStatements, _attrEmail, respData.Email))
+	if respData.ZipCode != "" {
+		attributeStatements.AddChild(buildAttribute(attributeStatements, _attrZipCode, respData.ZipCode))
+	}
+	if respData.EToken != "" {
+		attributeStatements.AddChild(buildAttribute(attributeStatements, _attrEToken, respData.EToken))
+	}
+	if respData.Picker != "" {
+		attributeStatements.AddChild(buildAttribute(attributeStatements, _attrPicker, respData.Picker))
+	}
+	if respData.ConcurrencyRule != "" {
+		attributeStatements.AddChild(buildAttribute(attributeStatements, _attrConcurrencyRule, respData.ConcurrencyRule))
+	}
+	if respData.SPID != "" {
+		attributeStatements.AddChild(buildAttribute(attributeStatements, _attrSPID, respData.SPID))
+	}
+	if respData.Email != "" {
+		attributeStatements.AddChild(buildAttribute(attributeStatements, _attrEmail, respData.Email))
+	}
 
 	signedAssertion, err := sp.SignResponse(assertion, respData.IsLegacyIssuerFormat)
 	if err != nil {
