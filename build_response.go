@@ -112,6 +112,12 @@ func (sp *SAMLServiceProvider) buildResponse(respData SAMLResponseData) (*etree.
 	authnCtxClassRef.SetText(ClassesAuthnContextPassword)
 
 	attributeStatements := assertion.CreateElement("saml2:AttributeStatement")
+	if respData.FirstName != "" {
+		attributeStatements.AddChild(buildAttribute(attributeStatements, _attrFirstName, respData.FirstName))
+	}
+	if respData.LastName != "" {
+		attributeStatements.AddChild(buildAttribute(attributeStatements, _attrLastName, respData.LastName))
+	}
 	if respData.ZipCode != "" {
 		attributeStatements.AddChild(buildAttribute(attributeStatements, _attrZipCode, respData.ZipCode))
 	}
