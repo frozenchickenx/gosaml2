@@ -513,11 +513,8 @@ func (ctx *ValidationContext) verifyCertificate(sig *Signature) (*x509.Certifica
 
 	var untrustedCert *x509.Certificate
 
-	if sig.KeyInfo != nil {
-		// If the Signature includes KeyInfo, extract the certificate from there
-		if len(sig.KeyInfo.X509Data.X509Certificates) == 0 || sig.KeyInfo.X509Data.X509Certificates[0].Data == "" {
-			return nil, errors.New("missing X509Certificate within KeyInfo")
-		}
+	if sig.KeyInfo != nil &&
+		(len(sig.KeyInfo.X509Data.X509Certificates) == 0 || sig.KeyInfo.X509Data.X509Certificates[0].Data == "") {
 
 		certData, err := base64.StdEncoding.DecodeString(
 			whiteSpace.ReplaceAllString(sig.KeyInfo.X509Data.X509Certificates[0].Data, ""))
