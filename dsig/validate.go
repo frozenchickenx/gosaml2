@@ -514,7 +514,7 @@ func (ctx *ValidationContext) verifyCertificate(sig *Signature) (*x509.Certifica
 	var untrustedCert *x509.Certificate
 
 	if sig.KeyInfo != nil &&
-		(len(sig.KeyInfo.X509Data.X509Certificates) == 0 || sig.KeyInfo.X509Data.X509Certificates[0].Data == "") {
+		(len(sig.KeyInfo.X509Data.X509Certificates) != 0 && sig.KeyInfo.X509Data.X509Certificates[0].Data != "") {
 
 		certData, err := base64.StdEncoding.DecodeString(
 			whiteSpace.ReplaceAllString(sig.KeyInfo.X509Data.X509Certificates[0].Data, ""))
