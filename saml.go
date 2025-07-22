@@ -92,8 +92,9 @@ type SAMLServiceProvider struct {
 	// this size during decompression an error will be returned.
 	MaximumDecompressedBodySize int64
 
-	signingContextMu sync.RWMutex
-	signingContext   *dsig.SigningContext
+	signingContextMu     sync.RWMutex
+	signingContext       *dsig.SigningContext
+	legacySigningContext *dsig.SigningContext // Used for legacy issuers
 }
 
 // SetSPKeyStore sets the encryption key to be used.
@@ -329,7 +330,12 @@ func (sp *SAMLServiceProvider) getSignerCert() (crypto.Signer, []byte, error) {
 
 func (sp *SAMLServiceProvider) SigningContext(isLegacyIssuer bool) *dsig.SigningContext {
 	sp.signingContextMu.RLock()
-	signingContext := sp.signingContext
+	var signingContext *dsig.SigningContext
+	if isLegacyIssuer {
+		signingContext = sp.legacySigningContext
+	} else {
+		signingContext = sp.signingContext
+	}
 	sp.signingContextMu.RUnlock()
 
 	if signingContext != nil {
